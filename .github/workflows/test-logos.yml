@@ -1,11 +1,10 @@
-name: Test Opponent Logo Probe
+name: Test Opponent Logo Probe (Rendered)
 
 on:
   workflow_dispatch: {}
-  pull_request:
   push:
     paths:
-      - "scraper/test_logo_grab.py"
+      - "scraper/test_logo_grab_playwright.py"
       - ".github/workflows/test-logos.yml"
 
 jobs:
@@ -20,30 +19,36 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install deps
+      - name: Install Python deps
         run: |
           python -m pip install --upgrade pip
-          pip install requests beautifulsoup4 lxml
+          pip install requests beautifulsoup4 lxml playwright
 
-      - name: Run probe
+      - name: Install Playwright browsers (Chromium)
         run: |
-          python -m scraper.test_logo_grab
+          python -m playwright install --with-deps chromium
 
-      - name: Upload report artifact
+      - name: Run rendered probe (Playwright)
+        run: |
+          python -m scraper.test_logo_grab_playwright
+
+      - name: Upload debug artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: opponent-logos-report
-          path: data/opponent_logos_found.json
+          name: huskers-logo-probe
+          path: |
+            data/opponent_logos_found.json
+            data/schedule_raw_rendered.html
+            docs/assets/opponents/_fetched/**
+          if-no-files-found: warn
 
-      # Optional: commit downloaded logos into docs/ so the site can use them
       - name: Commit downloaded logos (if any)
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
           git add docs/assets/opponents/_fetched || true
           if ! git diff --cached --quiet; then
-            git commit -m "Probe: add fetched opponent logos"
+            git commit -m "Probe: add fetched opponent logos (rendered)"
             git push
           else
             echo "No logo files to commit."
-          fi
