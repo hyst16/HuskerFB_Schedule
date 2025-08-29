@@ -17,7 +17,7 @@ from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
 
-from utils import slugify, normalize_tv
+from scraper.utils import slugify, normalize_tv
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
