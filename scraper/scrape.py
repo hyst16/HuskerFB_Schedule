@@ -234,10 +234,16 @@ def parse_schedule(html: str):
             va_txt = "vs."
 
         # Opponent logo (2nd image under __images is opponent)
-        logo_url = None
-        imgs = card.select(".schedule-event-item-default__images img")
-        if imgs and len(imgs) >= 2:
-            logo_url = imgs[-1].get("src") or imgs[-1].get("data-src")
+          logo_url = None
+          imgs = card.select(".schedule-event-item-default__images img")
+          if imgs and len(imgs) >= 2:
+          cand = imgs[-1]
+          logo_url = cand.get("src") or cand.get("data-src")
+          if not logo_url:
+          srcset = cand.get("srcset")
+            if srcset:
+              # take the first URL from "url 1x, url 2x"
+              logo_url = srcset.split(",")[0].strip().split(" ")[0]
 
         # Location "City, ST / Venue"
         loc_el = card.select_one(".schedule-event-location")
