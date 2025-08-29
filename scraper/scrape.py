@@ -51,174 +51,173 @@ def get_html(url: str) -> str:
 def parse_schedule(html: str):
     soup = BeautifulSoup(html, "lxml")
 
-    # Try a few common selectors Sidearm uses
-    rows = []
-    for sel in [
-        ".sidearm-schedule-game",
-        "li.schedule__list-item",
-        "div.schedule_game",
-        "tr",
-    ]:
-        rows = soup.select(sel)
-        if rows:
+    games = []
+
+    # 1) Try WMT "table" view first: headers like Date / Teams / Location / Time/Results
+    target_table = None
+    for table in soup.find_all("table"):
+        # gather header text
+        heads = [th.get_text(" ", strip=True).lower() for th in table.find_all("th")]
+        if not heads:
+            # some WMT tables use thead/tbody; try thead only
+            thead = table.find("thead")
+            if thead:
+                heads = [th.get_text(" ", strip=True).lower() for th in thead.find_all("th")]
+        if any("date" in h for h in heads) and any("location" in h for h in heads):
+            target_table = table
             break
 
-    games = []
-    for r in rows:
-        txt_all = r.get_text(" ", strip=True)
+    def clean(s: str) -> str:
+        return re.sub(r"\s+", " ", (s or "").strip())
 
-        # DATE
-        date_str = None
-        date_el = r.select_one("[data-date]") or r.select_one(
-            ".sidearm-schedule-game-opponent-date"
-        )
-        if date_el and date_el.get("data-date"):
-            date_str = date_el["data-date"]
+    def parse_date_tokens(date_txt: str):
+        # Example: "Thursday Aug 28"
+        m = re.search(r"(Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\s+([A-Z][a-z]{2,})\s+(\d{1,2})", date_txt, re.I)
+        if not m:
+            # Sometimes they render as "Saturday Sep 6"
+            m = re.search(r"([A-Z][a-z]{2,})\s+(\d{1,2})", date_txt, re.I)
+            if not m:
+                return None, None, None, None
+            weekday = None
+            month_str, day = m.group(1).title(), int(m.group(2))
         else:
-            m = re.search(
-                r"(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{1,2}",
-                txt_all,
-                re.I,
-            )
-            date_str = m.group(0) if m else None
+            weekday = m.group(1).upper()
+            month_str, day = m.group(2).title(), int(m.group(3))
 
-        # TIME
-        time_str = None
-        t_el = r.select_one("[data-time]") or r.select_one(
-            ".sidearm-schedule-game-opponent-time"
-        )
-        if t_el and t_el.get("data-time"):
-            time_str = t_el["data-time"]
-        else:
-            m = re.search(r"(\d{1,2}:\d{2}\s*[ap]m|tba)", txt_all, re.I)
-            time_str = m.group(0) if m else None
+        month_map = {
+            "Jan":1,"January":1,"Feb":2,"February":2,"Mar":3,"March":3,"Apr":4,"April":4,
+            "May":5,"Jun":6,"June":6,"Jul":7,"July":7,"Aug":8,"August":8,"Sep":9,"Sept":9,"September":9,
+            "Oct":10,"October":10,"Nov":11,"November":11,"Dec":12,"December":12
+        }
+        mm = month_map.get(month_str, None)
+        if not mm:
+            return None, None, None, None
+        now = datetime.now()
+        year = now.year
+        if mm < now.month - 1:
+            year = now.year + 1
+        return weekday, month_str[:3], day, year
 
-        # SITE
-        site = "home"
-        if re.search(r"\bat\b", txt_all, re.I):
-            site = "away"
-        if re.search(r"neutral", txt_all, re.I):
-            site = "neutral"
+    def determine_site(va_txt: str, city: str | None) -> str:
+        va_txt = (va_txt or "").lower()
+        city = (city or "").lower()
+        if "at" in va_txt:
+            return "away"
+        # "vs." can be home or neutral; Lincoln is home, otherwise treat as neutral
+        if "lincoln" in city:
+            return "home"
+        return "neutral"
 
-        # OPPONENT
-        opp = None
-        opp_el = r.select_one(
-            ".sidearm-schedule-game-opponent-name, .opponent, .team, .sidearm-schedule-game-opponent-text"
-        )
-        if opp_el:
-            opp = opp_el.get_text(" ", strip=True)
-        else:
-            m = re.search(r"\b(vs\.|at)\s+([^\n\r]+?)(?:\s{2,}|$)", txt_all, re.I)
-            opp = m.group(2).strip() if m else None
+    if target_table:
+        # Parse table rows
+        tbody = target_table.find("tbody") or target_table
+        for tr in tbody.find_all("tr"):
+            tds = tr.find_all(["td", "th"])
+            if len(tds) < 4:
+                continue
 
-        # LOCATION
-        city, venue = None, None
-        loc_el = r.select_one(".sidearm-schedule-game-location, .location")
-        if loc_el:
-            loc_txt = loc_el.get_text(" ", strip=True)
-            if " / " in loc_txt:
-                city, venue = [x.strip() for x in loc_txt.split(" / ", 1)]
+            date_col = clean(tds[0].get_text(" ", strip=True))
+            teams_col = clean(tds[1].get_text("\n", strip=True))
+            loc_col = clean(tds[2].get_text(" ", strip=True))
+            time_col = clean(tds[3].get_text(" ", strip=True))
+
+            # Teams column looks like:
+            # "vs.\nCincinnati" or "at\nMaryland"
+            va = "vs."
+            opp_name = teams_col
+            mteams = re.search(r"^(vs\.|at)\s*(.*)$", teams_col, re.I | re.M)
+            if mteams:
+                va = mteams.group(1).lower()
+                opp_name = mteams.group(2).strip()
+
+            # Location column usually: "Kansas City, Mo. / Arrowhead Stadium"
+            city, venue = None, None
+            if " / " in loc_col:
+                city, venue = [x.strip() for x in loc_col.split(" / ", 1)]
             else:
-                parts = [p.strip() for p in re.split(r"\s{2,}|\|", loc_txt) if p.strip()]
-                if len(parts) >= 2:
-                    city, venue = parts[0], parts[-1]
+                # sometimes it repeats city twice; take first token
+                parts = [p.strip() for p in re.split(r"\s{2,}|\|", loc_col) if p.strip()]
+                if parts:
+                    city = parts[0]
+
+            # Time
+            tv = None
+            tba = False
+            time_local = None
+            if not time_col or time_col.upper() == "TBA":
+                tba = True
+                time_local = "TBA"
+            else:
+                # Time/Results may contain result strings; keep only a time like "6:30 PM CDT" / "11:00 AM CST"
+                mt = re.search(r"\b(\d{1,2}:\d{2}\s*[AP]M(?:\s*[A-Z]{2,3}T)?)\b", time_col, re.I)
+                if mt:
+                    time_local = mt.group(1).upper().replace(".", "")
                 else:
-                    city = loc_txt
+                    tba = True
+                    time_local = "TBA"
 
-        # TV
-        tv = None
-        tv_el = r.select_one(".sidearm-schedule-game-video, .tv, .network")
-        if tv_el:
-            tv = normalize_tv(tv_el.get_text(" ", strip=True))
-        else:
-            m = re.search(
-                r"\b(fox|fs1|fs2|btn|abc|espn2|espn|espnu|nbc|cbs|peacock)\b", txt_all, re.I
-            )
-            tv = normalize_tv(m.group(1)) if m else None
-
-        # Build date/time fields
-        date_iso = None
-        time_local = None
-        weekday = None
-        tba = False
-        if date_str:
-            try:
-                now = datetime.now()
-                m2 = re.search(
-                    r"(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(\d{1,2})",
-                    date_str,
-                    re.I,
-                )
-                if m2:
-                    month_str = m2.group(1).title()
-                    day = int(m2.group(2))
-                    month_map = {
-                        "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
-                        "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12
-                    }
-                    mm = month_map[month_str]
-                    year = now.year
-                    if mm < now.month - 1:
-                        year = now.year + 1
-                    date_obj = datetime(year, mm, day)
-                    weekday = date_obj.strftime("%A").upper()
-                    if time_str and time_str.lower() != "tba":
-                        ts = re.sub(r"\s+", " ", time_str.upper().replace(".", ""))
-                        try:
-                            date_dt = datetime.strptime(
-                                f"{month_str} {day}, {year} {ts}", "%b %d, %Y %I:%M %p"
-                            )
-                        except ValueError:
-                            try:
-                                date_dt = datetime.strptime(
-                                    f"{month_str} {day}, {year} {ts}",
-                                    "%B %d, %Y %I:%M %p",
-                                )
-                            except ValueError:
-                                date_dt = datetime(year, mm, day, 12, 0)
-                        date_iso = date_dt.isoformat()
-                        time_local = ts
+            # Parse date
+            weekday, mo3, day, year = parse_date_tokens(date_col)
+            date_iso = None
+            date_str = None
+            if mo3 and day and year:
+                date_str = f"{mo3} {day}"
+                if not tba and time_local:
+                    # Build a datetime with time if we have it
+                    # Strip timezone text for ISO—display stays as-is
+                    mt2 = re.match(r"(\d{1,2}):(\d{2})\s*([AP]M)", time_local, re.I)
+                    if mt2:
+                        hh = int(mt2.group(1))
+                        mm = int(mt2.group(2))
+                        ampm = mt2.group(3).upper()
+                        if ampm == "PM" and hh != 12:
+                            hh += 12
+                        if ampm == "AM" and hh == 12:
+                            hh = 0
+                        date_iso = datetime(year, {"Jan":1,"Feb":2,"Mar":3,"Apr":4,"May":5,"Jun":6,"Jul":7,"Aug":8,"Sep":9,"Oct":10,"Nov":11,"Dec":12}[mo3], day, hh, mm).isoformat()
                     else:
-                        tba = True
-                        date_iso = date_obj.isoformat()
-                        time_local = "TBA"
-            except Exception:
-                pass
+                        date_iso = datetime(year, {"Jan":1,"Feb":2,"Mar":3,"Apr":4,"May":5,"Jun":6,"Jul":7,"Aug":8,"Sep":9,"Oct":10,"Nov":11,"Dec":12}[mo3], day).isoformat()
+                else:
+                    date_iso = datetime(year, {"Jan":1,"Feb":2,"Mar":3,"Apr":4,"May":5,"Jun":6,"Jul":7,"Aug":8,"Sep":9,"Oct":10,"Nov":11,"Dec":12}[mo3], day).isoformat()
 
-        va = "vs." if site == "home" else "at"
+            site = determine_site(va, city)
+            opp_slug = slugify(opp_name) if opp_name else None
 
-        # Stadium slug
-        venue_label = venue or ""
-        if venue_label in ALIASES:
-            venue_slug = ALIASES[venue_label]
-        else:
-            tag = ""
-            if city:
-                tag = "-" + slugify(re.sub(r",.*$", "", city))
-            base = venue_label or (city or "stadium")
-            base_slug = slugify(base)
-            venue_slug = base_slug + (tag if tag and base_slug not in tag else "")
+            # Stadium slug (use alias if provided)
+            venue_label = venue or ""
+            if venue_label in ALIASES:
+                venue_slug = ALIASES[venue_label]
+            else:
+                tag = ""
+                if city:
+                    tag = "-" + slugify(re.sub(r",.*$", "", city))
+                base = venue_label or (city or "stadium")
+                base_slug = slugify(base)
+                venue_slug = base_slug + (tag if tag and base_slug not in tag else "")
 
-        games.append(
-            {
+            games.append({
                 "date_iso": date_iso,
                 "weekday": weekday,
-                "date_str": date_str,
+                "date_str": date_str or date_col,
                 "time_local": time_local,
                 "tba": tba,
                 "site": site,
                 "va": va,
-                "opponent_name": opp,
-                "opponent_slug": slugify(opp) if opp else None,
+                "opponent_name": opp_name,
+                "opponent_slug": opp_slug,
                 "location_city": city,
                 "location_venue": venue_label,
                 "stadium_slug": venue_slug,
-                "tv_network": tv,
+                "tv_network": tv,  # (WMT doesn't always list TV in the table; we keep null/TBA)
                 "status": "scheduled",
-            }
-        )
+            })
 
-    # Filter obviously empty rows
+    # 2) If table not found (future-proof), fall back to your previous block parser
+    if not games:
+        # (keep your existing non-table parsing here if you want a fallback)
+        pass
+
+    # Filter empties
     games = [g for g in games if g.get("opponent_name")]
     return games
 
