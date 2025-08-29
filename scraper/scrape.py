@@ -233,28 +233,36 @@ def parse_schedule(html: str):
         if va_txt not in ("vs.", "at"):
             va_txt = "vs."
           
-         # Opponent logo (2nd image under __images is opponent)
+         # Opponent logo: find <img> whose alt matches the opponent name
         logo_url = None
-        imgs = card.select(".schedule-event-item-default__images img")
-        if imgs and len(imgs) >= 2:
-            cand = imgs[-1]
-        
-            # helper to pull first url from a srcset-like string
-            def first_from_srcset(s: str | None) -> str | None:
-                if not s: return None
-                return s.split(",")[0].strip().split(" ")[0]
-        
-            # Prefer data-* sources (lazy-loaded), then srcset, finally src
-            url_order = [
-                cand.get("data-src"),
-                first_from_srcset(cand.get("data-srcset")),
-                first_from_srcset(cand.get("srcset")),
-                cand.get("src"),
-            ]
-            for u in url_order:
-                if u and not u.startswith("data:image"):
-                    logo_url = u
+        if opp_name_clean:
+            # any img under the card whose alt contains the opponent name (case-insensitive)
+            imgs_all = card.select("img[alt]")
+            target = None
+            on_cf = opp_name_clean.casefold()
+            for im in imgs_all:
+                alt = (im.get("alt") or "").strip().casefold()
+                # skip Nebraska's own N mark; look for opponent
+                if alt and on_cf in alt and "nebraska" not in alt:
+                    target = im
                     break
+
+            if target:
+                def first_from_srcset(s):
+                    if not s: return None
+                    return s.split(",")[0].strip().split(" ")[0]
+
+                url_candidates = [
+                    target.get("data-src"),
+                    first_from_srcset(target.get("data-srcset")),
+                    first_from_srcset(target.get("srcset")),
+                    target.get("src"),
+                ]
+                for u in url_candidates:
+                    # ignore 1x1 placeholders
+                    if u and not u.startswith("data:image"):
+                        logo_url = u
+                        break
                   
         # Location "City, ST / Venue"
         loc_el = card.select_one(".schedule-event-location")
