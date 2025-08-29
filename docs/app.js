@@ -29,7 +29,7 @@ function tvLogo(tv){
 }
 
 function stadiumBackground(slug){
-  return `../assets/stadiums/${slug || 'memorial-stadium-lincoln'}.jpg`;
+  return `./assets/stadiums/${slug || 'memorial-stadium-lincoln'}.jpg`;
 }
 
 function opponentLogo(slug, remoteUrl){
