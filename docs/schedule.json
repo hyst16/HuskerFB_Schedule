@@ -7,13 +7,14 @@
     "tba": true,
     "site": "neutral",
     "va": "vs.",
-    "opponent_name": "Cincinnati Kansas City, Mo. / Arrowhead Stadium",
-    "opponent_slug": "cincinnati-kansas-city-mo-arrowhead-stadium",
+    "opponent_name": "Cincinnati",
+    "opponent_slug": "cincinnati",
     "location_city": "Kansas City, Mo.",
     "location_venue": "Arrowhead Stadium",
     "stadium_slug": "arrowhead-stadium-kansas-city",
     "tv_network": null,
-    "status": "scheduled"
+    "status": "scheduled",
+    "opponent_logo_url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
   },
   {
     "date_iso": "2025-09-06T18:30:00",
@@ -23,13 +24,14 @@
     "tba": false,
     "site": "home",
     "va": "vs.",
-    "opponent_name": "Akron Lincoln, Neb. / Memorial Stadium",
-    "opponent_slug": "akron-lincoln-neb-memorial-stadium",
+    "opponent_name": "Akron",
+    "opponent_slug": "akron",
     "location_city": "Lincoln, Neb.",
     "location_venue": "Memorial Stadium",
     "stadium_slug": "memorial-stadium-lincoln",
-    "tv_network": null,
-    "status": "scheduled"
+    "tv_network": "btn",
+    "status": "scheduled",
+    "opponent_logo_url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
   },
   {
     "date_iso": "2025-09-13T11:00:00",
@@ -39,13 +41,14 @@
     "tba": false,
     "site": "home",
     "va": "vs.",
-    "opponent_name": "Houston Christian Lincoln, Neb. / Memorial Stadium",
-    "opponent_slug": "houston-christian-lincoln-neb-memorial-stadium",
+    "opponent_name": "Houston Christian",
+    "opponent_slug": "houston-christian",
     "location_city": "Lincoln, Neb.",
     "location_venue": "Memorial Stadium",
     "stadium_slug": "memorial-stadium-lincoln",
     "tv_network": null,
-    "status": "scheduled"
+    "status": "scheduled",
+    "opponent_logo_url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
   },
   {
     "date_iso": "2025-09-20T14:30:00",
@@ -55,13 +58,14 @@
     "tba": false,
     "site": "home",
     "va": "vs.",
-    "opponent_name": "Michigan Lincoln, Neb. / Memorial Stadium",
-    "opponent_slug": "michigan-lincoln-neb-memorial-stadium",
+    "opponent_name": "Michigan",
+    "opponent_slug": "michigan",
     "location_city": "Lincoln, Neb.",
     "location_venue": "Memorial Stadium",
     "stadium_slug": "memorial-stadium-lincoln",
     "tv_network": null,
-    "status": "scheduled"
+    "status": "scheduled",
+    "opponent_logo_url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
   },
   {
     "date_iso": "2025-10-04T00:00:00",
@@ -71,13 +75,14 @@
     "tba": true,
     "site": "home",
     "va": "vs.",
-    "opponent_name": "Michigan State Lincoln, Neb. / Memorial Stadium",
-    "opponent_slug": "michigan-state-lincoln-neb-memorial-stadium",
+    "opponent_name": "Michigan",
+    "opponent_slug": "michigan",
     "location_city": "Lincoln, Neb.",
     "location_venue": "Memorial Stadium",
     "stadium_slug": "memorial-stadium-lincoln",
     "tv_network": null,
-    "status": "scheduled"
+    "status": "scheduled",
+    "opponent_logo_url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
   },
   {
     "date_iso": "2025-10-11T00:00:00",
@@ -87,13 +92,14 @@
     "tba": true,
     "site": "away",
     "va": "at",
-    "opponent_name": "Maryland College Park, Md.",
-    "opponent_slug": "maryland-college-park-md",
+    "opponent_name": "Maryland",
+    "opponent_slug": "maryland",
     "location_city": "College Park, Md.",
     "location_venue": "",
     "stadium_slug": "college-park-md-college-park",
     "tv_network": null,
-    "status": "scheduled"
+    "status": "scheduled",
+    "opponent_logo_url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
   },
   {
     "date_iso": "2025-10-17T19:00:00",
@@ -103,13 +109,14 @@
     "tba": false,
     "site": "away",
     "va": "at",
-    "opponent_name": "Minnesota Minneapolis, Minn.",
-    "opponent_slug": "minnesota-minneapolis-minn",
+    "opponent_name": "Minnesota",
+    "opponent_slug": "minnesota",
     "location_city": "Minneapolis, Minn.",
     "location_venue": "",
     "stadium_slug": "minneapolis-minn-minneapolis",
     "tv_network": null,
-    "status": "scheduled"
+    "status": "scheduled",
+    "opponent_logo_url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
   },
   {
     "date_iso": "2025-10-25T00:00:00",
@@ -119,13 +126,14 @@
     "tba": true,
     "site": "home",
     "va": "vs.",
-    "opponent_name": "Northwestern Lincoln, Neb. / Memorial Stadium",
-    "opponent_slug": "northwestern-lincoln-neb-memorial-stadium",
+    "opponent_name": "Northwestern",
+    "opponent_slug": "northwestern",
     "location_city": "Lincoln, Neb.",
     "location_venue": "Memorial Stadium",
     "stadium_slug": "memorial-stadium-lincoln",
     "tv_network": null,
-    "status": "scheduled"
+    "status": "scheduled",
+    "opponent_logo_url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
   },
   {
     "date_iso": "2025-11-01T00:00:00",
@@ -135,13 +143,14 @@
     "tba": true,
     "site": "home",
     "va": "vs.",
-    "opponent_name": "USC Lincoln, Neb. / Memorial Stadium",
-    "opponent_slug": "usc-lincoln-neb-memorial-stadium",
+    "opponent_name": "USC",
+    "opponent_slug": "usc",
     "location_city": "Lincoln, Neb.",
     "location_venue": "Memorial Stadium",
     "stadium_slug": "memorial-stadium-lincoln",
     "tv_network": null,
-    "status": "scheduled"
+    "status": "scheduled",
+    "opponent_logo_url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
   },
   {
     "date_iso": "2025-11-08T00:00:00",
@@ -151,13 +160,14 @@
     "tba": true,
     "site": "away",
     "va": "at",
-    "opponent_name": "UCLA Pasadena, Calif.",
-    "opponent_slug": "ucla-pasadena-calif",
+    "opponent_name": "UCLA",
+    "opponent_slug": "ucla",
     "location_city": "Pasadena, Calif.",
     "location_venue": "",
     "stadium_slug": "pasadena-calif-pasadena",
     "tv_network": null,
-    "status": "scheduled"
+    "status": "scheduled",
+    "opponent_logo_url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
   },
   {
     "date_iso": "2025-11-22T00:00:00",
@@ -167,13 +177,14 @@
     "tba": true,
     "site": "away",
     "va": "at",
-    "opponent_name": "Penn State University Park, Pa.",
-    "opponent_slug": "penn-state-university-park-pa",
+    "opponent_name": "Penn State",
+    "opponent_slug": "penn-state",
     "location_city": "University Park, Pa.",
     "location_venue": "",
     "stadium_slug": "university-park-pa-university-park",
     "tv_network": null,
-    "status": "scheduled"
+    "status": "scheduled",
+    "opponent_logo_url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
   },
   {
     "date_iso": "2025-11-28T11:00:00",
@@ -183,12 +194,13 @@
     "tba": false,
     "site": "home",
     "va": "vs.",
-    "opponent_name": "Iowa Lincoln, Neb. / Memorial Stadium",
-    "opponent_slug": "iowa-lincoln-neb-memorial-stadium",
+    "opponent_name": "Iowa",
+    "opponent_slug": "iowa",
     "location_city": "Lincoln, Neb.",
     "location_venue": "Memorial Stadium",
     "stadium_slug": "memorial-stadium-lincoln",
     "tv_network": null,
-    "status": "scheduled"
+    "status": "scheduled",
+    "opponent_logo_url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
   }
 ]
