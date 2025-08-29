@@ -217,6 +217,93 @@ def parse_schedule(html: str):
         # (keep your existing non-table parsing here if you want a fallback)
         pass
 
+    # --- Enrichment pass using WMT card markup ---
+    # Build a lookup from opponent name → details found in cards
+    card_info = []
+
+    # Each card has opponent name/logo, vs./at, location and a bottom list that can include a TV logo
+    for card in soup.select("div.schedule-event-item-default"):
+        # Opponent name
+        on_el = card.select_one(".schedule-event-item-default__opponent-name")
+        opp_name_clean = on_el.get_text(strip=True) if on_el else None
+
+        # vs/at
+        va_el = card.select_one(".schedule-event-item-default__divider")
+        va_txt = va_el.get_text(strip=True).lower() if va_el else None
+        if va_txt not in ("vs.", "at"):
+            va_txt = "vs."
+
+        # Opponent logo (2nd image under __images is opponent)
+        logo_url = None
+        imgs = card.select(".schedule-event-item-default__images img")
+        if imgs and len(imgs) >= 2:
+            logo_url = imgs[-1].get("src") or imgs[-1].get("data-src")
+
+        # Location "City, ST / Venue"
+        loc_el = card.select_one(".schedule-event-location")
+        loc_txt = loc_el.get_text(" ", strip=True) if loc_el else None
+        city, venue = None, None
+        if loc_txt:
+            if " / " in loc_txt:
+                city, venue = [x.strip() for x in loc_txt.split(" / ", 1)]
+            else:
+                city = loc_txt
+
+        # TV: image alt inside the bottom link list
+        tv_alt = None
+        tv_img = card.find_next("div", class_="schedule-event-bottom__list")
+        if tv_img:
+            img = tv_img.select_one("a.schedule-event-bottom__link img[alt]")
+            if img:
+                tv_alt = (img.get("alt") or "").strip()
+
+        card_info.append({
+            "opp_name": opp_name_clean,
+            "va": va_txt,
+            "city": city,
+            "venue": venue,
+            "logo": logo_url,
+            "tv_alt": tv_alt,
+        })
+
+    # Normalize TV names
+    def tv_norm(tv_alt):
+        if not tv_alt:
+            return None
+        key = re.sub(r"[^a-z0-9 ]+", "", tv_alt.lower().strip())
+        # our utils.normalize_tv handles "big ten network" -> 'btn'
+        from scraper.utils import normalize_tv
+        return normalize_tv(key) or normalize_tv(tv_alt)
+
+    # Merge card info into games by opponent name (best-effort)
+    for g in games:
+        name = (g.get("opponent_name") or "").strip()
+        # if table parser produced junk, prefer a card match on contains
+        best = None
+        for ci in card_info:
+            if not ci["opp_name"]:
+                continue
+            # loose match: either side contains the other (casefold)
+            a, b = ci["opp_name"].casefold(), name.casefold()
+            if a and (a in b or b in a):
+                best = ci
+                break
+        if best:
+            g["opponent_name"] = best["opp_name"] or g["opponent_name"]
+            g["opponent_slug"] = slugify(best["opp_name"]) if best["opp_name"] else g.get("opponent_slug")
+            g["va"] = best["va"] or g.get("va")
+            if best["city"]:
+                g["location_city"] = best["city"]
+            if best["venue"]:
+                g["location_venue"] = best["venue"]
+                # recompute stadium slug with city tag
+                tag = "-" + slugify(re.sub(r",.*$", "", best["city"])) if best["city"] else ""
+                base = best["venue"]
+                base_slug = slugify(base)
+                g["stadium_slug"] = base_slug + (tag if tag and base_slug not in tag else "")
+            g["opponent_logo_url"] = best["logo"]
+            g["tv_network"] = tv_norm(best["tv_alt"]) or g.get("tv_network")
+
     # Filter empties
     games = [g for g in games if g.get("opponent_name")]
     return games
