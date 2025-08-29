@@ -25,19 +25,20 @@ function tvLogo(tv){
     btn:'btn', cbs:'cbs', nbc:'nbc', peacock:'peacock',
     abc:'abc', espn:'espn', espn2:'espn2', espnu:'espnu'
   }[tv];
-  return file ? `./tv/${file}.svg` : null;
+  // Use PNGs for convenience; drop PNGs into docs/tv/
+  return file ? `./tv/${file}.png` : null;
 }
 
 function stadiumBackground(slug){
+  // Images must live under docs/assets/stadiums/
   return `./assets/stadiums/${slug || 'memorial-stadium-lincoln'}.jpg`;
 }
 
-function opponentLogo(slug, remoteUrl){
-  // Prefer the remote SVG/PNG captured from huskers.com
-  if (remoteUrl) return remoteUrl;
-  if (!slug) return null;
-  // Optional local cache path if you later add team marks
-  return `../assets/opponents/${slug}.png`;
+// Prefer the remote logo URL from the scraper; fall back to optional local override
+function opponentLogo(remoteUrl, slug){
+  if (remoteUrl) return remoteUrl;                 // from opponent_logo_url
+  if (slug) return `./assets/opponents/${slug}.png`; // optional local file (inside /docs)
+  return './tv/opponent.svg';                      // final fallback icon
 }
 
 function ensureTwoColIfOverflow(container){
@@ -63,8 +64,9 @@ async function renderTV(){
   // HERO
   const hero = document.querySelector('#hero');
   const hbg = document.createElement('div'); hbg.className = 'bg';
-  let bgPath = stadiumBackground(next.stadium_slug || 'memorial-stadium-lincoln');
+  const bgPath = stadiumBackground(next.stadium_slug || 'memorial-stadium-lincoln');
   hbg.style.backgroundImage = `url('${bgPath}')`;
+
   const overlay = document.createElement('div'); overlay.className='overlay';
   const content = document.createElement('div'); content.className='content';
   const lock = document.createElement('div'); lock.className='lockup';
@@ -75,7 +77,7 @@ async function renderTV(){
   const opp = document.createElement('div'); opp.className='opp';
   const oimg = document.createElement('img');
   oimg.alt = next.opponent_name || 'Opponent';
-  oimg.src = opponentLogo(next.opponent_slug, next.opponent_logo_url) || './tv/opponent.svg';
+  oimg.src = opponentLogo(next.opponent_logo_url, next.opponent_slug);
   const otext = document.createElement('div'); otext.className='title'; otext.textContent = (next.opponent_name || '').toUpperCase();
   opp.appendChild(oimg);
 
@@ -92,8 +94,12 @@ async function renderTV(){
   if(tvp){
     const tvi = document.createElement('img');
     tvi.src = tvp;
-    tvi.alt = next.tv_network.toUpperCase();
+    tvi.alt = (next.tv_network || 'TV').toUpperCase();
     tvc.appendChild(tvi);
+  } else {
+    tvc.textContent = 'TBA';
+    tvc.style.color = '#cbd5e1';
+    tvc.style.fontWeight = '700';
   }
 
   content.append(lock, meta);
@@ -114,7 +120,7 @@ async function renderTV(){
     const va2 = document.createElement('div'); va2.className='va'; va2.textContent = g.va || (g.site==='home'?'vs.':'at');
     const oimg2 = document.createElement('img');
     oimg2.alt = g.opponent_name || 'Opponent';
-    oimg2.src = opponentLogo(g.opponent_slug, g.opponent_logo_url) || './tv/opponent.svg';
+    oimg2.src = opponentLogo(g.opponent_logo_url, g.opponent_slug);
     const owrap = document.createElement('div');
     const oname = document.createElement('div'); oname.style.fontWeight='800'; oname.style.letterSpacing='.02em'; oname.textContent = (g.opponent_name||'').toUpperCase();
     const sub = document.createElement('div'); sub.className='sub'; sub.textContent = [g.location_city, g.location_venue].filter(Boolean).join(' / ');
@@ -124,7 +130,7 @@ async function renderTV(){
     const tvcell = document.createElement('div'); tvcell.className='tvcell';
     const tl = tvLogo(g.tv_network);
     if(tl){
-      const tvi2 = document.createElement('img'); tvi2.src = tl; tvi2.alt=g.tv_network.toUpperCase(); tvcell.appendChild(tvi2);
+      const tvi2 = document.createElement('img'); tvi2.src = tl; tvi2.alt=(g.tv_network||'TV').toUpperCase(); tvcell.appendChild(tvi2);
     } else {
       tvcell.textContent = 'TBA'; tvcell.style.color = '#cbd5e1'; tvcell.style.fontWeight='700';
     }
